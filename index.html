@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ITlusions — Building Secure, Scalable Platforms</title>
-  <meta name="description" content="ITlusions builds secure, cloud-native platforms: ITL Control Plane, BrainCell persistent memory, Amalia security intelligence, and shared GitHub Actions." />
+  <meta name="description" content="ITlusions builds secure, cloud-native platforms: ITL Control Plane, BrainCell persistent memory, and shared GitHub Actions." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2358a6ff' stroke-width='2'><circle cx='12' cy='12' r='3'/><path d='M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14'/><path d='M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07'/></svg>" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -340,9 +340,56 @@
     @media (max-width: 480px) {
       .hero h1 { font-size: 1.85rem; }
     }
+
+    /* ── CONSENT BANNER ── */
+    #consent-banner {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 200;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+      color: var(--muted);
+      box-shadow: 0 -4px 24px rgba(0,0,0,.4);
+    }
+    #consent-banner.hidden { display: none; }
+    #consent-banner p { flex: 1; min-width: 200px; margin: 0; }
+    #consent-banner a { color: var(--accent2); }
+    .consent-actions { display: flex; gap: 0.6rem; flex-shrink: 0; }
+    .consent-btn {
+      padding: 7px 18px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      transition: opacity 0.15s;
+    }
+    .consent-btn:hover { opacity: 0.8; }
+    .consent-btn.accept { background: var(--accent); border-color: var(--accent); color: #fff; }
   </style>
 </head>
 <body>
+
+<!-- Consent Banner -->
+<div id="consent-banner" class="hidden" role="dialog" aria-live="polite" aria-label="Cookie consent">
+  <p>
+    We use <strong>Google Analytics</strong> to understand how visitors use this site. No personal data is sold or shared.
+    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy policy</a>
+  </p>
+  <div class="consent-actions">
+    <button class="consent-btn" id="consent-decline">Decline</button>
+    <button class="consent-btn accept" id="consent-accept">Accept analytics</button>
+  </div>
+</div>
 
 <nav>
   <a class="nav-brand" href="#">
@@ -609,9 +656,49 @@
   </p>
 </footer>
 
+<!-- Google Analytics (loaded only after consent) -->
 <script>
+  const GA_ID = "G-ZMRZZN92B0";
+  const CONSENT_KEY = "itl_analytics_consent";
+
+  function loadGA() {
+    if (document.getElementById("ga-script")) return;
+    const s = document.createElement("script");
+    s.id = "ga-script";
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag("js", new Date());
+    gtag("config", GA_ID, { anonymize_ip: true });
+  }
+
+  // ── Consent banner logic ──
+  const banner  = document.getElementById("consent-banner");
+  const stored  = localStorage.getItem(CONSENT_KEY);
+
+  if (stored === "accepted") {
+    loadGA();
+  } else if (stored === null) {
+    banner.classList.remove("hidden");
+  }
+
+  document.getElementById("consent-accept").addEventListener("click", () => {
+    localStorage.setItem(CONSENT_KEY, "accepted");
+    banner.classList.add("hidden");
+    loadGA();
+  });
+  document.getElementById("consent-decline").addEventListener("click", () => {
+    localStorage.setItem(CONSENT_KEY, "declined");
+    banner.classList.add("hidden");
+  });
+
+  // ── Year ──
   document.getElementById("yr").textContent = new Date().getFullYear();
 
+  // ── Nav hamburger ──
   const navToggle = document.getElementById("nav-toggle");
   const navLinks  = document.getElementById("nav-links");
   navToggle.addEventListener("click", () => {
