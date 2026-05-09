@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ITlusions — Building Secure, Scalable Platforms</title>
+  <meta name="description" content="ITlusions builds secure, cloud-native platforms: ITL Control Plane, BrainCell persistent memory, and shared GitHub Actions." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2358a6ff' stroke-width='2'><circle cx='12' cy='12' r='3'/><path d='M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14'/><path d='M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07'/></svg>" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #060910;
+      --surface:   rgba(255,255,255,.04);
+      --surface2:  rgba(255,255,255,.07);
+      --glass:     rgba(255,255,255,.055);
+      --glass-border: rgba(255,255,255,.1);
+      --glass-hover: rgba(255,255,255,.09);
+      --accent:    #1f6feb;
+      --accent2:   #58a6ff;
+      --accent3:   #79c0ff;
+      --purple:    #a371f7;
+      --green:     #3fb950;
+      --warning:   #d29922;
+      --danger:    #f78166;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --radius:    12px;
+      --radius-lg: 18px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      font-size: 16px;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── MESH BACKGROUND ── */
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .bg-mesh::before {
+      content: "";
+      position: absolute;
+      width: 900px; height: 900px;
+      top: -300px; left: -200px;
+      background: radial-gradient(circle, rgba(31,111,235,.18) 0%, transparent 65%);
+      animation: drift1 20s ease-in-out infinite alternate;
+    }
+    .bg-mesh::after {
+      content: "";
+      position: absolute;
+      width: 700px; height: 700px;
+      bottom: -200px; right: -100px;
+      background: radial-gradient(circle, rgba(163,113,247,.14) 0%, transparent 65%);
+      animation: drift2 25s ease-in-out infinite alternate;
+    }
+    .bg-mesh-mid {
+      position: fixed;
+      width: 600px; height: 600px;
+      top: 40%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(63,185,80,.07) 0%, transparent 65%);
+      animation: drift3 30s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes drift1 { from { transform: translate(0,0) scale(1); } to { transform: translate(80px, 60px) scale(1.1); } }
+    @keyframes drift2 { from { transform: translate(0,0) scale(1); } to { transform: translate(-60px, -80px) scale(1.15); } }
+    @keyframes drift3 { from { transform: translate(-50%,-50%) scale(1); } to { transform: translate(-45%,-55%) scale(1.2); } }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(6, 9, 16, 0.6);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text);
+      text-decoration: none;
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+    .nav-brand:hover { color: var(--accent2); text-decoration: none; }
+    .nav-brand-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, rgba(31,111,235,.3), rgba(163,113,247,.2));
+      border: 1px solid rgba(88,166,255,.3);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-links { display: flex; gap: 2px; list-style: none; }
+    .nav-links a {
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 5px 12px;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--glass); text-decoration: none; }
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 22px; height: 16px;
+      background: none; border: none; cursor: pointer; padding: 0; flex-shrink: 0;
+    }
+    .nav-toggle span { display: block; height: 2px; background: var(--text); border-radius: 2px; transition: transform 0.2s, opacity 0.2s; }
+    .nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-toggle.open span:nth-child(2) { opacity: 0; }
+    .nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── LAYOUT ── */
+    .page { position: relative; z-index: 1; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+    section { padding: 5rem 0; position: relative; z-index: 1; }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 7rem 2rem 6rem;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(88,166,255,.08);
+      color: var(--accent3);
+      border: 1px solid rgba(88,166,255,.2);
+      border-radius: 2rem;
+      padding: 5px 16px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      margin-bottom: 2rem;
+      backdrop-filter: blur(8px);
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--accent2);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--accent2);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.08;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 .line2 {
+      background: linear-gradient(90deg, var(--accent2) 0%, var(--purple) 60%, var(--accent2) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 4s linear infinite;
+    }
+    @keyframes shimmer { from { background-position: 0% center; } to { background-position: 200% center; } }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 3rem;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ── GLASS BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 50px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.01em;
+    }
+    .btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+      border-radius: inherit;
+    }
+    .btn:hover::after { opacity: 1; }
+    .btn:hover { text-decoration: none; transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(31,111,235,.9), rgba(88,166,255,.8));
+      color: #fff;
+      border-color: rgba(88,166,255,.4);
+      box-shadow: 0 4px 24px rgba(31,111,235,.35), inset 0 1px 0 rgba(255,255,255,.2);
+    }
+    .btn-primary::after { background: rgba(255,255,255,.1); }
+    .btn-primary:hover { box-shadow: 0 6px 32px rgba(31,111,235,.5), inset 0 1px 0 rgba(255,255,255,.25); }
+
+    .btn-glass {
+      background: rgba(255,255,255,.07);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      color: var(--text);
+      border-color: rgba(255,255,255,.12);
+      box-shadow: 0 4px 16px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .btn-glass::after { background: rgba(255,255,255,.06); }
+    .btn-glass:hover { border-color: rgba(255,255,255,.2); box-shadow: 0 6px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12); }
+
+    /* ── VALUES STRIP ── */
+    .values-strip {
+      background: rgba(255,255,255,.02);
+      border-top: 1px solid var(--glass-border);
+      border-bottom: 1px solid var(--glass-border);
+      backdrop-filter: blur(8px);
+      position: relative; z-index: 1;
+    }
+    .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; }
+    .value-item {
+      padding: 2rem 1.75rem;
+      border-right: 1px solid var(--glass-border);
+    }
+    .value-item:last-child { border-right: none; }
+    .value-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 0.75rem;
+    }
+    .value-item h4 { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.35rem; letter-spacing: -0.01em; }
+    .value-item p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── SECTION LABELS ── */
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 0.85rem;
+      opacity: 0.9;
+    }
+    section h2 {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+    .section-desc {
+      color: var(--muted);
+      max-width: 560px;
+      margin-bottom: 3rem;
+      font-size: 1rem;
+    }
+
+    /* ── PLATFORM CARDS ── */
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .platform-card {
+      background: var(--glass);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1.6rem;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .platform-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+    }
+    .platform-card:hover {
+      border-color: rgba(88,166,255,.3);
+      background: var(--glass-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(88,166,255,.1);
+    }
+    .platform-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 0.2rem;
+    }
+    .platform-card h3 { font-size: 0.97rem; font-weight: 700; letter-spacing: -0.01em; }
+    .platform-card p { font-size: 0.84rem; color: var(--muted); line-height: 1.6; flex: 1; }
+    .platform-card-link {
+      font-size: 0.8rem;
+      color: var(--accent2);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 0.25rem;
+      transition: gap 0.15s;
+    }
+    .platform-card-link:hover { gap: 6px; text-decoration: none; }
+
+    .tag {
+      display: inline-block;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      letter-spacing: 0.03em;
+    }
+    .tag-blue    { background: rgba(31,111,235,.15);  border: 1px solid rgba(88,166,255,.25);   color: var(--accent2); }
+    .tag-green   { background: rgba(63,185,80,.12);   border: 1px solid rgba(63,185,80,.25);    color: var(--green); }
+    .tag-purple  { background: rgba(163,113,247,.12); border: 1px solid rgba(163,113,247,.25);  color: var(--purple); }
+    .tag-orange  { background: rgba(210,153,34,.12);  border: 1px solid rgba(210,153,34,.25);   color: var(--warning); }
+    .tag-red     { background: rgba(247,129,102,.1);  border: 1px solid rgba(247,129,102,.25);  color: var(--danger); }
+
+    /* ── REPO CARDS ── */
+    .repo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 0.85rem;
+    }
+    .repo-card {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .repo-card:hover {
+      border-color: rgba(88,166,255,.3);
+      background: var(--glass-hover);
+      transform: translateY(-2px);
+      text-decoration: none;
+    }
+    .repo-card-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .repo-card h4 { font-size: 0.875rem; font-weight: 600; letter-spacing: -0.01em; }
+    .repo-card p { font-size: 0.8rem; color: var(--muted); flex: 1; }
+    .repo-card-footer { display: flex; gap: 0.75rem; align-items: center; font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+    .lang-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── ABOUT ── */
+    .about-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+    .about-card {
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+    }
+    .about-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem; }
+    .about-card p { font-size: 0.875rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center;
+      padding: 7rem 2rem;
+      position: relative; z-index: 1;
+    }
+    .cta-inner {
+      max-width: 600px;
+      margin: 0 auto;
+      background: var(--glass);
+      backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 3.5rem 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-inner::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(31,111,235,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-inner::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(88,166,255,.3), transparent);
+    }
+    .cta-section h2 {
+      font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+    }
+    .cta-section p { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--glass-border);
+      padding: 24px 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      position: relative; z-index: 1;
+    }
+    footer a { color: var(--muted); transition: color 0.15s; }
+    footer a:hover { color: var(--accent2); text-decoration: none; }
+
+    /* ── CONSENT BANNER ── */
+    #consent-banner {
+      position: fixed;
+      bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      background: rgba(22, 27, 34, 0.85);
+      backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+      font-size: 0.83rem;
+      color: var(--muted);
+      box-shadow: 0 8px 40px rgba(0,0,0,.6);
+      max-width: 600px;
+      width: calc(100% - 2rem);
+    }
+    #consent-banner.hidden { display: none; }
+    #consent-banner p { flex: 1; margin: 0; }
+    #consent-banner a { color: var(--accent2); }
+    .consent-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .consent-btn {
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      backdrop-filter: blur(8px);
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .consent-btn:hover { background: var(--glass-hover); border-color: rgba(255,255,255,.2); }
+    .consent-btn.accept {
+      background: linear-gradient(135deg, rgba(31,111,235,.9), rgba(88,166,255,.8));
+      border-color: rgba(88,166,255,.4);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(31,111,235,.3);
+    }
+    .consent-btn.accept:hover { box-shadow: 0 4px 20px rgba(31,111,235,.45); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .about-inner { grid-template-columns: 1fr; gap: 1.5rem; }
+      .values-grid { grid-template-columns: repeat(2, 1fr); }
+      .value-item:nth-child(2) { border-right: none; }
+      .value-item:nth-child(3) { border-right: 1px solid var(--glass-border); }
+      .value-item:nth-child(4) { border-right: none; }
+    }
+    @media (max-width: 768px) {
+      nav { padding: 0 1rem; }
+      .nav-toggle { display: flex; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 56px; left: 0; right: 0;
+        flex-direction: column;
+        gap: 0;
+        background: rgba(6, 9, 16, 0.95);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--glass-border);
+        padding: 0.5rem 0;
+        z-index: 99;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links li { width: 100%; }
+      .nav-links a { display: block; padding: 0.75rem 1.5rem; border-radius: 0; font-size: 0.95rem; color: var(--text); }
+      .hero { padding: 4.5rem 1.25rem 4rem; }
+      .hero-actions { flex-direction: column; align-items: center; }
+      .btn { width: 100%; max-width: 280px; justify-content: center; }
+      .container { padding: 0 1.25rem; }
+      section { padding: 3.5rem 0; }
+      .value-item { border-right: none; border-bottom: 1px solid var(--glass-border); }
+      .value-item:last-child { border-bottom: none; }
+      .values-grid { grid-template-columns: 1fr; }
+      .cta-inner { padding: 2.5rem 1.5rem; border-radius: 16px; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Animated background mesh -->
+<div class="bg-mesh" aria-hidden="true"></div>
+<div class="bg-mesh-mid" aria-hidden="true"></div>
+
+<!-- Consent Banner -->
+<div id="consent-banner" class="hidden" role="dialog" aria-live="polite" aria-label="Cookie consent">
+  <p>We use <strong>Google Analytics</strong> to understand site usage. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy policy</a></p>
+  <div class="consent-actions">
+    <button class="consent-btn" id="consent-decline">Decline</button>
+    <button class="consent-btn accept" id="consent-accept">Accept</button>
+  </div>
+</div>
+
+<div class="page">
+
+<nav>
+  <a class="nav-brand" href="#">
+    <div class="nav-brand-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07"/>
+      </svg>
+    </div>
+    ITlusions
+  </a>
+  <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" id="nav-toggle">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#platforms">Platforms</a></li>
+    <li><a href="#repos">Repositories</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="https://itlusions.github.io/ITL.Github/" target="_blank" rel="noopener">Docs</a></li>
+    <li><a href="https://github.com/ITlusions" target="_blank" rel="noopener">GitHub</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    Cloud-native &nbsp;&middot;&nbsp; Security-first &nbsp;&middot;&nbsp; Open Source
+  </div>
+  <h1>Building Secure,<br><span class="line2">Scalable Platforms</span></h1>
+  <p>ITlusions engineers cloud-native control planes, persistent AI memory, security intelligence, and shared DevOps tooling — built in the open.</p>
+  <div class="hero-actions">
+    <a href="#platforms" class="btn btn-primary">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Explore Platforms
+    </a>
+    <a href="https://github.com/ITlusions" target="_blank" rel="noopener" class="btn btn-glass">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      View on GitHub
+    </a>
+  </div>
+</header>
+
+<!-- Values -->
+<div class="values-strip">
+  <div class="container">
+    <div class="values-grid">
+      <div class="value-item">
+        <div class="value-icon" style="background:rgba(31,111,235,.12);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h4>Security First</h4>
+        <p>Zero-trust, OIDC-native auth, and hardened OS layers from the ground up.</p>
+      </div>
+      <div class="value-item">
+        <div class="value-icon" style="background:rgba(63,185,80,.1);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <h4>Cloud Native</h4>
+        <p>Kubernetes, ARM-style resource models, async Python, and container-first design.</p>
+      </div>
+      <div class="value-item">
+        <div class="value-icon" style="background:rgba(163,113,247,.1);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a371f7" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <h4>Build Once</h4>
+        <p>Shared GitHub Actions workflows eliminate double builds across every repo.</p>
+      </div>
+      <div class="value-item">
+        <div class="value-icon" style="background:rgba(210,153,34,.1);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d29922" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        </div>
+        <h4>Open Source</h4>
+        <p>Core platform components are built in the open under the ITlusions org.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Platforms -->
+<section id="platforms">
+  <div class="container">
+    <div class="section-label">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Platforms
+    </div>
+    <h2>What We Build</h2>
+    <p class="section-desc">Each platform solves a specific layer of the modern cloud-native stack.</p>
+    <div class="platform-grid">
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(31,111,235,.12);border:1px solid rgba(88,166,255,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07"/></svg>
+        </div>
+        <span class="tag tag-blue">Control Plane</span>
+        <h3>ITL Control Plane</h3>
+        <p>ARM-style multi-tenant resource management. Tenants, subscriptions, resource groups, and providers — all via a unified REST + GraphQL API.</p>
+        <a href="https://github.com/ITlusions/ITL.ControlPlane.Api" target="_blank" rel="noopener" class="platform-card-link">
+          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <span class="tag tag-green">AI Memory</span>
+        <h3>BrainCell</h3>
+        <p>Persistent memory platform for AI agents. Structured cells expose REST and MCP interfaces backed by PostgreSQL, Weaviate, and Redis.</p>
+        <a href="https://github.com/ITlusions/ITL.BrainCell" target="_blank" rel="noopener" class="platform-card-link">
+          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(247,129,102,.08);border:1px solid rgba(247,129,102,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f78166" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <span class="tag tag-red">Security</span>
+        <h3>Amalia</h3>
+        <p>Security intelligence platform. SIGINT, OSINT, threat intel feeds, binary analysis, and adversarial testing — all in one ops surface.</p>
+        <a href="https://github.com/ITlusions/ITL.Amalia" target="_blank" rel="noopener" class="platform-card-link">
+          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d29922" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <span class="tag tag-orange">DevOps</span>
+        <h3>ITL.Github</h3>
+        <p>Shared GitHub Actions and reusable workflows. Build once, promote everywhere — OIDC publishing, semantic versioning, and Docker promotion.</p>
+        <a href="https://itlusions.github.io/ITL.Github/" target="_blank" rel="noopener" class="platform-card-link">
+          View docs <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(163,113,247,.1);border:1px solid rgba(163,113,247,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a371f7" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        </div>
+        <span class="tag tag-purple">OS</span>
+        <h3>Talos HardenedOS</h3>
+        <p>Security-hardened Kubernetes OS built on Talos Linux. Immutable, minimal attack surface, and GitOps-ready cluster bootstrapping.</p>
+        <a href="https://github.com/ITlusions/ITL.Talos.HardenedOS" target="_blank" rel="noopener" class="platform-card-link">
+          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(31,111,235,.12);border:1px solid rgba(88,166,255,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2"><line x1="16" y1="8" x2="8" y2="8"/><line x1="16" y1="12" x2="8" y2="12"/><line x1="16" y1="16" x2="11" y2="16"/><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/></svg>
+        </div>
+        <span class="tag tag-blue">CLI</span>
+        <h3>ITL Control Plane CLI</h3>
+        <p>Unified CLI for the ITL platform. OIDC/Keycloak auth, cluster management, resource CRUD — all with ARM-style URL patterns.</p>
+        <a href="https://github.com/ITlusions/ITL.ControlPlane.CLI" target="_blank" rel="noopener" class="platform-card-link">
+          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(31,111,235,.12);border:1px solid rgba(88,166,255,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        </div>
+        <span class="tag tag-blue">Azure</span>
+        <h3>Subscription Vending</h3>
+        <p>Automated Azure subscription provisioning pipeline. Event-driven workflow engine with ServiceNow integration, RBAC assignment, and preflight checks.</p>
+        <a href="https://github.com/ITlusions/ITL.Platform.SubscriptionVending" target="_blank" rel="noopener" class="platform-card-link">
+          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d29922" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <span class="tag tag-orange">Bicep</span>
+        <h3>Bicep Extensions for Azure DevOps</h3>
+        <p>Custom Bicep extensibility provider for Azure DevOps service connections — create and manage ADO resources declaratively from Bicep templates.</p>
+        <a href="https://github.com/ITlusions/ITL.Bicep.Extensions.AzureDevOps" target="_blank" rel="noopener" class="platform-card-link">
+          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        </div>
+        <span class="tag tag-green">Policy</span>
+        <h3>ITL Policy Builder</h3>
+        <p>Code-first Azure Policy authoring. Build, test, and deploy Azure Policy definitions and initiatives — with managed identity enforcement and PQC crypto asset scanning.</p>
+        <a href="https://github.com/ITlusions/ITL.ControlPanel.PolicyBuilder" target="_blank" rel="noopener" class="platform-card-link">
+          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Repos -->
+<section id="repos" style="background: rgba(255,255,255,.015); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);">
+  <div class="container">
+    <div class="section-label">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      Repositories
+    </div>
+    <h2>All Repositories</h2>
+    <p class="section-desc">Open-source components available on GitHub under the ITlusions organization.</p>
+    <div class="repo-grid">
+      <a href="https://github.com/ITlusions/ITL.ControlPlane.Api" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.ControlPlane.Api</h4><span class="tag tag-blue">Python</span></div>
+        <p>REST API for the ITL Control Plane — multi-tenant resource management.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.BrainCell" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.BrainCell</h4><span class="tag tag-green">Python</span></div>
+        <p>Core library for the BrainCell persistent memory platform.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.BrainCell.Api" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.BrainCell.Api</h4><span class="tag tag-green">Python</span></div>
+        <p>FastAPI REST surface for BrainCell memory cells — port 9504.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.BrainCell.Mcp" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.BrainCell.Mcp</h4><span class="tag tag-green">Python</span></div>
+        <p>FastMCP server exposing BrainCell cells as MCP tools — port 9506.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.Amalia" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.Amalia</h4><span class="tag tag-red">Security</span></div>
+        <p>Security intelligence and threat operations platform.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.ControlPlane.CLI" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.ControlPlane.CLI</h4><span class="tag tag-blue">Python</span></div>
+        <p>Unified CLI for ITL platform — OIDC auth, cluster and resource management.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.Talos.HardenedOS" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.Talos.HardenedOS</h4><span class="tag tag-purple">OS</span></div>
+        <p>Security-hardened Kubernetes OS built on Talos Linux.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#e34c26"></span>Shell / PS1</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.Github" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.Github</h4><span class="tag tag-orange">Actions</span></div>
+        <p>Shared GitHub Actions and reusable workflows for all ITlusions repos.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#89e051"></span>YAML</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.Platform.SubscriptionVending" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.Platform.SubscriptionVending</h4><span class="tag tag-blue">Azure</span></div>
+        <p>Event-driven Azure subscription provisioning with ServiceNow, RBAC, and preflight checks.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.Bicep.Extensions.AzureDevOps" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.Bicep.Extensions.AzureDevOps</h4><span class="tag tag-orange">Bicep</span></div>
+        <p>Custom Bicep extensibility provider for Azure DevOps service connections.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#178600"></span>C# / Python</div>
+      </a>
+      <a href="https://github.com/ITlusions/ITL.ControlPanel.PolicyBuilder" target="_blank" rel="noopener" class="repo-card">
+        <div class="repo-card-top"><h4>ITL.ControlPanel.PolicyBuilder</h4><span class="tag tag-green">Policy</span></div>
+        <p>Code-first Azure Policy authoring — managed identity enforcement, Kyverno, and PQC crypto scanning.</p>
+        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- About -->
+<section id="about">
+  <div class="container">
+    <div class="section-label">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      About
+    </div>
+    <h2>About ITlusions</h2>
+    <div class="about-inner">
+      <div>
+        <p style="color:var(--muted);font-size:.95rem;line-height:1.8;margin-bottom:2rem">ITlusions is an independent platform engineering shop focused on building secure, observable, and maintainable cloud infrastructure. We work on multi-tenant control planes, AI agent tooling, and security operations — in the open.</p>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+          <a href="https://github.com/ITlusions" target="_blank" rel="noopener" class="btn btn-glass">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            GitHub Organization
+          </a>
+          <a href="mailto:n.weistra@itlusions.com" class="btn btn-glass">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Contact
+          </a>
+        </div>
+      </div>
+      <div class="about-card">
+        <h3>Engineering Focus</h3>
+        <p>Multi-tenant cloud control planes with ARM-style resource hierarchies. Persistent AI memory via the BrainCell MCP/REST platform. Security operations tooling including OSINT, threat intel, and adversarial testing. Shared GitHub Actions workflows and reusable CI/CD infrastructure used across all ITlusions repos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-inner">
+    <h2>Start Building with ITlusions</h2>
+    <p>All platforms are open source. Explore the repos, read the docs, or reach out to collaborate.</p>
+    <div class="hero-actions">
+      <a href="https://github.com/ITlusions" target="_blank" rel="noopener" class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        View All Repos
+      </a>
+      <a href="https://itlusions.github.io/ITL.Github/" target="_blank" rel="noopener" class="btn btn-glass">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        ITL.Github Docs
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>
+    <a href="#">ITlusions</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://github.com/ITlusions" target="_blank" rel="noopener">GitHub</a>
+    &nbsp;&middot;&nbsp;
+    <span id="yr"></span>
+  </p>
+  <p style="margin-top:.4rem">
+    <a href="mailto:n.weistra@itlusions.com">Niels Weistra</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://nl.linkedin.com/in/nielswei" target="_blank" rel="noopener">LinkedIn</a>
+  </p>
+</footer>
+
+</div><!-- /page -->
+
+<script>
+  const GA_ID = "G-ZMRZZN92B0";
+  const CONSENT_KEY = "itl_analytics_consent";
+
+  function loadGA() {
+    if (document.getElementById("ga-script")) return;
+    const s = document.createElement("script");
+    s.id = "ga-script";
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag("js", new Date());
+    gtag("config", GA_ID, { anonymize_ip: true });
+  }
+
+  const banner = document.getElementById("consent-banner");
+  const stored = localStorage.getItem(CONSENT_KEY);
+  if (stored === "accepted") { loadGA(); }
+  else if (stored === null) { banner.classList.remove("hidden"); }
+
+  document.getElementById("consent-accept").addEventListener("click", () => {
+    localStorage.setItem(CONSENT_KEY, "accepted");
+    banner.classList.add("hidden");
+    loadGA();
+  });
+  document.getElementById("consent-decline").addEventListener("click", () => {
+    localStorage.setItem(CONSENT_KEY, "declined");
+    banner.classList.add("hidden");
+  });
+
+  document.getElementById("yr").textContent = new Date().getFullYear();
+
+  const navToggle = document.getElementById("nav-toggle");
+  const navLinks  = document.getElementById("nav-links");
+  navToggle.addEventListener("click", () => {
+    const open = navLinks.classList.toggle("open");
+    navToggle.classList.toggle("open", open);
+    navToggle.setAttribute("aria-expanded", open);
+  });
+  navLinks.querySelectorAll("a").forEach(a => {
+    a.addEventListener("click", () => {
+      navLinks.classList.remove("open");
+      navToggle.classList.remove("open");
+      navToggle.setAttribute("aria-expanded", false);
+    });
+  });
+</script>
+</body>
+</html>
