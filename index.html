@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ITlusions — Building Secure, Scalable Platforms</title>
-  <meta name="description" content="ITlusions builds secure, cloud-native platforms: ITL Control Plane, BrainCell persistent memory, and shared GitHub Actions." />
+  <meta name="description" content="ITlusions builds secure, cloud-native platforms: ITL Control Plane, zero-trust workload identity with SPIFFE/SPIRE, BrainCell persistent memory, and shared GitHub Actions." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2358a6ff' stroke-width='2'><circle cx='12' cy='12' r='3'/><path d='M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14'/><path d='M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07'/></svg>" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -586,7 +586,6 @@
   </button>
   <ul class="nav-links" id="nav-links">
     <li><a href="#platforms">Platforms</a></li>
-    <li><a href="#repos">Repositories</a></li>
     <li><a href="#about">About</a></li>
     <li><a href="https://itlusions.github.io/ITL.Github/" target="_blank" rel="noopener">Docs</a></li>
     <li><a href="https://github.com/ITlusions" target="_blank" rel="noopener">GitHub</a></li>
@@ -666,8 +665,8 @@
         </div>
         <span class="tag tag-blue">Control Plane</span>
         <h3>ITL Control Plane</h3>
-        <p>ARM-style multi-tenant resource management. Tenants, subscriptions, resource groups, and providers — all via a unified REST + GraphQL API.</p>
-        <a href="https://github.com/ITlusions/ITL.ControlPlane.Api" target="_blank" rel="noopener" class="platform-card-link">
+        <p>A full multi-tenant control plane, not just an API: an API gateway, a swarm of ARM-style resource providers (network, storage, container, identity, compute), IAM, and its own portal/dashboard/admin UIs, deployed as one Helm stack.</p>
+        <a href="https://github.com/ITlusions/ITL.ControlPlane.Stack" target="_blank" rel="noopener" class="platform-card-link">
           View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </a>
       </div>
@@ -690,9 +689,9 @@
         </div>
         <span class="tag tag-red">Security</span>
         <h3>Amalia</h3>
-        <p>Security intelligence platform. SIGINT, OSINT, threat intel feeds, binary analysis, and adversarial testing — all in one ops surface.</p>
-        <a href="https://github.com/ITlusions/ITL.Amalia" target="_blank" rel="noopener" class="platform-card-link">
-          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        <p>Security intelligence platform. SIGINT, OSINT, threat intel feeds, binary analysis, and adversarial testing — all in one ops surface. Core platform is closed-source; edge collectors are public.</p>
+        <a href="mailto:n.weistra@itlusions.com" class="platform-card-link">
+          Get in touch <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </a>
       </div>
 
@@ -763,7 +762,19 @@
         <span class="tag tag-green">Policy</span>
         <h3>ITL Policy Builder</h3>
         <p>Code-first Azure Policy authoring. Build, test, and deploy Azure Policy definitions and initiatives — with managed identity enforcement and PQC crypto asset scanning.</p>
-        <a href="https://github.com/ITlusions/ITL.ControlPanel.PolicyBuilder" target="_blank" rel="noopener" class="platform-card-link">
+        <a href="https://github.com/ITlusions/ITL.ControlPlane.PolicyBuilder" target="_blank" rel="noopener" class="platform-card-link">
+          View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon" style="background:rgba(163,113,247,.1);border:1px solid rgba(163,113,247,.2);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a371f7" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="2.5"/></svg>
+        </div>
+        <span class="tag tag-purple">Zero Trust</span>
+        <h3>Identity &amp; Workload Trust</h3>
+        <p>SPIFFE/SPIRE-based workload identity for the cluster. Short-lived X.509 and JWT SVIDs issued per pod with zero static credentials — Kyverno auto-injects it into any workload that opts in.</p>
+        <a href="https://github.com/ITlusions/ITL.Identity.Spire" target="_blank" rel="noopener" class="platform-card-link">
           View repo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </a>
       </div>
@@ -781,79 +792,21 @@
       </div>
 
     </div>
-  </div>
-</section>
 
-<!-- Repos -->
-<section id="repos" style="background: rgba(255,255,255,.015); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);">
-  <div class="container">
-    <div class="section-label">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-      Repositories
-    </div>
-    <h2>All Repositories</h2>
-    <p class="section-desc">Open-source components available on GitHub under the ITlusions organization.</p>
-    <div class="repo-grid">
-      <a href="https://github.com/ITlusions/ITL.ControlPlane.Api" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.ControlPlane.Api</h4><span class="tag tag-blue">Python</span></div>
-        <p>REST API for the ITL Control Plane — multi-tenant resource management.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.BrainCell" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.BrainCell</h4><span class="tag tag-green">Python</span></div>
-        <p>Core library for the BrainCell persistent memory platform.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.BrainCell.Api" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.BrainCell.Api</h4><span class="tag tag-green">Python</span></div>
-        <p>FastAPI REST surface for BrainCell memory cells — port 9504.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.BrainCell.Mcp" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.BrainCell.Mcp</h4><span class="tag tag-green">Python</span></div>
-        <p>FastMCP server exposing BrainCell cells as MCP tools — port 9506.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.Amalia" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.Amalia</h4><span class="tag tag-red">Security</span></div>
-        <p>Security intelligence and threat operations platform.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.ControlPlane.CLI" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.ControlPlane.CLI</h4><span class="tag tag-blue">Python</span></div>
-        <p>Unified CLI for ITL platform — OIDC auth, cluster and resource management.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.Talos.HardenedOS" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.Talos.HardenedOS</h4><span class="tag tag-purple">OS</span></div>
-        <p>Security-hardened Kubernetes OS built on Talos Linux.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#e34c26"></span>Shell / PS1</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.Github" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.Github</h4><span class="tag tag-orange">Actions</span></div>
-        <p>Shared GitHub Actions and reusable workflows for all ITlusions repos.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#89e051"></span>YAML</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.Platform.SubscriptionVending" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.Platform.SubscriptionVending</h4><span class="tag tag-blue">Azure</span></div>
-        <p>Event-driven Azure subscription provisioning with ServiceNow, RBAC, and preflight checks.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.Bicep.Extensions.AzureDevOps" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.Bicep.Extensions.AzureDevOps</h4><span class="tag tag-orange">Bicep</span></div>
-        <p>Custom Bicep extensibility provider for Azure DevOps service connections.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#178600"></span>C# / Python</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.ControlPanel.PolicyBuilder" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.ControlPanel.PolicyBuilder</h4><span class="tag tag-green">Policy</span></div>
-        <p>Code-first Azure Policy authoring — managed identity enforcement, Kyverno, and PQC crypto scanning.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-      </a>
-      <a href="https://github.com/ITlusions/ITL.ControlPlane.Attestation" target="_blank" rel="noopener" class="repo-card">
-        <div class="repo-card-top"><h4>ITL.ControlPlane.Attestation</h4><span class="tag tag-green">Security</span></div>
-        <p>TPM-based hardware attestation service — register, attest, and issue bootstrap tokens with immutable audit log.</p>
-        <div class="repo-card-footer"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-      </a>
+    <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid var(--glass-border)">
+      <p style="font-size:0.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem">Infrastructure we run it on</p>
+      <div style="display:flex;flex-wrap:wrap;gap:0.6rem">
+        <a href="https://github.com/ITlusions/ITL.Headscale" target="_blank" rel="noopener" class="tag tag-blue" style="padding:6px 14px">Headscale</a>
+        <a href="https://github.com/ITlusions/ITL.Cilium" target="_blank" rel="noopener" class="tag tag-blue" style="padding:6px 14px">Cilium</a>
+        <a href="https://github.com/ITlusions/ITL.Tetragon" target="_blank" rel="noopener" class="tag tag-blue" style="padding:6px 14px">Tetragon</a>
+        <a href="https://github.com/ITlusions/ITL.Longhorn" target="_blank" rel="noopener" class="tag tag-green" style="padding:6px 14px">Longhorn</a>
+        <a href="https://github.com/ITlusions/ITL.Kyverno" target="_blank" rel="noopener" class="tag tag-green" style="padding:6px 14px">Kyverno</a>
+        <a href="https://github.com/ITlusions/ITL.CNPG" target="_blank" rel="noopener" class="tag tag-green" style="padding:6px 14px">CloudNativePG</a>
+        <a href="https://github.com/ITlusions/ITL.ArgoCD" target="_blank" rel="noopener" class="tag tag-orange" style="padding:6px 14px">ArgoCD</a>
+        <a href="https://github.com/ITlusions/ITL.Container.Registry" target="_blank" rel="noopener" class="tag tag-orange" style="padding:6px 14px">Container Registry</a>
+        <a href="https://github.com/ITlusions/ITL.Istio" target="_blank" rel="noopener" class="tag tag-purple" style="padding:6px 14px">Istio</a>
+        <a href="https://github.com/ITlusions/ITL.Talos.HardenedOS" target="_blank" rel="noopener" class="tag tag-purple" style="padding:6px 14px">Talos</a>
+      </div>
     </div>
   </div>
 </section>
